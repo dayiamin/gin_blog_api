@@ -1,0 +1,510 @@
+basePath: /api/v1
+definitions:
+  models.Post:
+    properties:
+      caption:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      pic_address:
+        type: string
+      postComment:
+        items:
+          $ref: '#/definitions/models.PostComment'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      userID:
+        type: integer
+    type: object
+  models.PostComment:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      postID:
+        type: integer
+      text:
+        type: string
+      updated_at:
+        type: string
+      userID:
+        type: integer
+    type: object
+  models.PostCommentsRegister:
+    properties:
+      text:
+        maxLength: 250
+        type: string
+    required:
+    - text
+    type: object
+  models.PostRegister:
+    properties:
+      caption:
+        maxLength: 1000
+        type: string
+      pic_address:
+        type: string
+      title:
+        maxLength: 250
+        type: string
+    type: object
+  models.RegisterUsers:
+    properties:
+      email:
+        maxLength: 100
+        minLength: 3
+        type: string
+      password:
+        maxLength: 100
+        minLength: 6
+        type: string
+      user_name:
+        maxLength: 100
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - user_name
+    type: object
+  models.UserLoginRequest:
+    properties:
+      credential:
+        type: string
+      password:
+        type: string
+    required:
+    - credential
+    - password
+    type: object
+  models.UserProfile:
+    properties:
+      bio:
+        type: string
+      created_at:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      profile_pic:
+        type: string
+      updated_at:
+        type: string
+      userID:
+        type: integer
+    type: object
+  models.UserProfileRegister:
+    properties:
+      bio:
+        maxLength: 400
+        type: string
+      first_name:
+        maxLength: 100
+        type: string
+      last_name:
+        maxLength: 100
+        type: string
+      profile_pic:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: this is api for creating users and posting blogs and comments
+  title: Blog Post api
+  version: "1.0"
+paths:
+  /post:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all posts with their associated comments.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'posts: List of posts with comments'
+          schema:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/models.Post'
+              type: array
+            type: object
+        "500":
+          description: 'error: Failed to fetch posts'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all posts
+      tags:
+      - posts
+  /post/{post_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post and its associated comments by post ID. Requires
+        JWT authentication.
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Post deleted, Post ID: Deleted post ID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Failed to find the post'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Unauthorized (missing or invalid JWT)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error (database issue)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - JWT: []
+      summary: Delete a post
+      tags:
+      - posts
+  /post/{post_id}/comments:
+    post:
+      consumes:
+      - application/json
+      description: Add a comment to a specific post for the authenticated user. Requires
+        JWT authentication.
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: Comment details
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.PostCommentsRegister'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: Comment added successfully, comment: Created comment
+            data'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'error: Invalid input'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Unauthorized (missing or invalid JWT)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error (post not found or database issue)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - JWT: []
+      summary: Create a comment
+      tags:
+      - comments
+  /post/{post_id}/comments/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a comment by its ID for a specific post. Requires JWT authentication.
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Comment deleted, comment ID: Deleted comment ID'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Failed to find the comment'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Unauthorized (missing or invalid JWT)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error (database issue)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - JWT: []
+      summary: Delete a comment
+      tags:
+      - comments
+  /post/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new post with image address, title, and caption for the
+        authenticated user. Requires JWT authentication.
+      parameters:
+      - description: Post creation details
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/models.PostRegister'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: Post created, post: Created post data'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'error: Invalid input'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Unauthorized (missing or invalid JWT)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error (database issue)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - JWT: []
+      summary: Create a new post
+      tags:
+      - posts
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user using username or email and password. Returns
+        a JWT token upon successful login.
+      parameters:
+      - description: Login credentials (username or email and password)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Success message, token: JWT token'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Invalid input'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Incorrect username/email or password'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error (JWT generation)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+      tags:
+      - users
+  /user/profile:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user profile or update an existing one for the authenticated
+        user. Requires JWT authentication.
+      parameters:
+      - description: User profile details
+        in: body
+        name: profile
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserProfileRegister'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Profile updated, profile: Updated user profile data'
+          schema:
+            additionalProperties: true
+            type: object
+        "201":
+          description: 'message: Profile created, profile: User profile data'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'error: Invalid input'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Unauthorized (missing or invalid JWT)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error (database issue)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - JWT: []
+      summary: Create or update user profile
+      tags:
+      - profiles
+  /user/profile/{user_name}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the profile details of a user by their username. Requires
+        JWT authentication.
+      parameters:
+      - description: Username of the user
+        in: path
+        name: user_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'profile: User profile data'
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/models.UserProfile'
+            type: object
+        "400":
+          description: 'error: User or profile not found'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Unauthorized (missing or invalid JWT)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - JWT: []
+      summary: Get user profile
+      tags:
+      - profiles
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with username, email, and password. Returns
+        a JWT token upon successful registration.
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterUsers'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: Success message, token: JWT token'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Invalid input'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error (hashing or database issue)'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - users
+securityDefinitions:
+  JWT:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
